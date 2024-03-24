@@ -70,7 +70,7 @@ FROM nginx:alpine as nginx_image
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Make sure the sun-panel executable is runnable
 RUN chmod +x /app/sun-panel
