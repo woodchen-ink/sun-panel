@@ -31,7 +31,6 @@ RUN apk add --no-cache bash curl gcc git musl-dev \
 # nginx and final setup
 FROM nginx:alpine
 
-# Setup directories
 WORKDIR /app
 
 # Copy built assets
@@ -44,7 +43,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-# Ensuring sun-panel runs on port 3002 and setting up start script
+# Setup start script
 RUN echo -e "#!/bin/sh\n./sun-panel -port=3002 &\nnginx -g 'daemon off;'" > start.sh \
     && chmod +x start.sh
 
