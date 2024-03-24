@@ -2,10 +2,10 @@
   "name": "sun-panel",
   "version": "0.0.0",
   "private": false,
-  "description": "Sun-Panel Web",
+  "description": "CZL导航 Web",
   "author": "BraisedHunter <95302870@qq.com>",
   "keywords": [
-    "Sun-Panel",
+    "CZL导航",
     "vue"
   ],
   "scripts": {
