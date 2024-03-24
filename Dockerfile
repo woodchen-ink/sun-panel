@@ -62,21 +62,3 @@ RUN apk add --no-cache bash ca-certificates su-exec tzdata \
     && ./sun-panel -config
 
 CMD ./sun-panel
-
-# Nginx stage
-FROM nginx:alpine as nginx_image
-
-# Remove default nginx configuration
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Make sure the sun-panel executable is runnable
-RUN chmod +x /app/sun-panel
-
-# Expose port 80 for Nginx
-EXPOSE 80
-
-# Start Nginx and keep it running in the background, start the sun-panel application
-CMD nginx -g 'daemon off;' & /app/sun-panel
