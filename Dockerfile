@@ -1,7 +1,7 @@
-# build frontend
+# Build frontend
 FROM node AS web_image
 
-# 华为源
+# Optionally set a mirror for npm for better performance
 # RUN npm config set registry https://repo.huaweicloud.com/repository/npm/
 
 RUN npm install pnpm -g
@@ -9,7 +9,6 @@ RUN npm install pnpm -g
 WORKDIR /build
 
 COPY ./package.json /build
-
 COPY ./pnpm-lock.yaml /build
 
 RUN pnpm install
@@ -18,19 +17,12 @@ COPY . /build
 
 RUN pnpm run build
 
-# build backend
-# 最新alpine3.19导致sqlite3编译失败(https://github.com/mattn/go-sqlite3/issues/1164，
-# 临时解决方案:https://github.com/mattn/go-sqlite3/pull/1177)
-# sun-panel暂时解决方案使用golang:1.21-alpine3.18（因旧版本使用没问题，短期内较稳定） 
+# Build backend
 FROM golang:1.21-alpine3.18 as server_image
 
 WORKDIR /build
 
 COPY ./service .
-
-# 中国国内源
-# RUN sed -i "s@dl-cdn.alpinelinux.org@mirrors.aliyun.com@g" /etc/apk/repositories \
-#     && go env -w GOPROXY=https://goproxy.cn,direct
 
 RUN apk add --no-cache bash curl gcc git musl-dev
 
@@ -41,31 +33,30 @@ RUN go env -w GO111MODULE=on \
     && go-bindata-assetfs -o=assets/bindata.go -pkg=assets assets/... \
     && go build -o sun-panel --ldflags="-X sun-panel/global.RUNCODE=release -X sun-panel/global.ISDOCKER=docker" main.go
 
-
-
-# run_image
+# Setup the final image
 FROM alpine
 
-WORKDIR /app
+# Install Nginx
+RUN apk add --no-cache nginx bash ca-certificates su-exec tzdata
 
-COPY --from=web_image /build/dist /app/web
+# Setup directories
+RUN mkdir -p /run/nginx
 
-COPY --from=server_image /build/sun-panel /app/sun-panel
-
-# nginx and final setup
-FROM nginx:alpine
-
-# Setup Nginx
+# Remove the default Nginx configuration
 RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy the Nginx configuration from the build context
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy built assets from previous stages
+COPY --from=web_image /build/dist /var/www/html
+COPY --from=server_image /build/sun-panel /app/sun-panel
+
+# Expose port 80 for Nginx
 EXPOSE 80
 
-# 中国国内源
-# RUN sed -i "s@dl-cdn.alpinelinux.org@mirrors.aliyun.com@g" /etc/apk/repositories
+# Add a script to start Nginx and sun-panel
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
-RUN apk add --no-cache bash ca-certificates su-exec tzdata \
-    && chmod +x ./sun-panel \
-    && ./sun-panel -config
-
-CMD ./sun-panel
+CMD ["/start.sh"]
