@@ -1,7 +1,7 @@
-# Build frontend
+# build frontend
 FROM node AS web_image
 
-# Optionally set a mirror for npm for better performance
+# 华为源
 # RUN npm config set registry https://repo.huaweicloud.com/repository/npm/
 
 RUN npm install pnpm -g
@@ -9,6 +9,7 @@ RUN npm install pnpm -g
 WORKDIR /build
 
 COPY ./package.json /build
+
 COPY ./pnpm-lock.yaml /build
 
 RUN pnpm install
@@ -17,12 +18,19 @@ COPY . /build
 
 RUN pnpm run build
 
-# Build backend
+# build backend
+# 最新alpine3.19导致sqlite3编译失败(https://github.com/mattn/go-sqlite3/issues/1164，
+# 临时解决方案:https://github.com/mattn/go-sqlite3/pull/1177)
+# sun-panel暂时解决方案使用golang:1.21-alpine3.18（因旧版本使用没问题，短期内较稳定） 
 FROM golang:1.21-alpine3.18 as server_image
 
 WORKDIR /build
 
 COPY ./service .
+
+# 中国国内源
+# RUN sed -i "s@dl-cdn.alpinelinux.org@mirrors.aliyun.com@g" /etc/apk/repositories \
+#     && go env -w GOPROXY=https://goproxy.cn,direct
 
 RUN apk add --no-cache bash curl gcc git musl-dev
 
@@ -33,30 +41,48 @@ RUN go env -w GO111MODULE=on \
     && go-bindata-assetfs -o=assets/bindata.go -pkg=assets assets/... \
     && go build -o sun-panel --ldflags="-X sun-panel/global.RUNCODE=release -X sun-panel/global.ISDOCKER=docker" main.go
 
-# Setup the final image
+
+
+# run_image
 FROM alpine
 
-# Install Nginx
-RUN apk add --no-cache nginx bash ca-certificates su-exec tzdata
+WORKDIR /app
 
-# Setup directories
-RUN mkdir -p /run/nginx
+COPY --from=web_image /build/dist /app/web
 
-# Remove the default Nginx configuration
+COPY --from=server_image /build/sun-panel /app/sun-panel
+
+# 中国国内源
+# RUN sed -i "s@dl-cdn.alpinelinux.org@mirrors.aliyun.com@g" /etc/apk/repositories
+
+EXPOSE 3002
+
+RUN apk add --no-cache bash ca-certificates su-exec tzdata \
+    && chmod +x ./sun-panel \
+    && ./sun-panel -config
+
+CMD ./sun-panel
+
+# Nginx stage
+FROM nginx:alpine as nginx_image
+
+# Remove default nginx configuration
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy the Nginx configuration from the build context
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/
 
-# Copy built assets from previous stages
-COPY --from=web_image /build/dist /var/www/html
+# Copy static assets from web_image stage
+COPY --from=web_image /build/dist /usr/share/nginx/html
+
+# Copy server binary and assets from server_image stage
 COPY --from=server_image /build/sun-panel /app/sun-panel
+
+# Make sure the sun-panel executable is runnable
+RUN chmod +x /app/sun-panel
 
 # Expose port 80 for Nginx
 EXPOSE 80
 
-# Add a script to start Nginx and sun-panel
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+# Start Nginx and keep it running in the background, start the sun-panel application
+CMD nginx -g 'daemon off;' & /app/sun-panel
