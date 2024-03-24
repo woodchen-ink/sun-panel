@@ -1,39 +1,42 @@
-name: docker-push
+name: Docker
 
 on:
-  workflow_dispatch:
-  # 暂时取消自动编译，优化后重新开启
-  # push:
-  #   tags:
-  #     - 'v*'
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+env:
+  IMAGE_NAME: sun-panel
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: 检出代码库
         uses: actions/checkout@v3
 
-      - name: Read version from file
-        id: read_version
-        run: echo "APP_VERSION=$(cut -d '|' -f 2 ./service/assets/version)" >> $GITHUB_ENV
+      - name: 构建镜像
+        run: docker build . --file Dockerfile --tag $IMAGE_NAME
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+      - name: 登录到镜像仓库
+        run: echo "${{ secrets.ACCESS_TOKEN }}" | docker login -u woodchen --password-stdin
 
-      - name: Set up Docker Buildx 
-        uses: docker/setup-buildx-action@v2
+      - name: 推送镜像
+        run: |
+          IMAGE_ID=woodchen/$IMAGE_NAME
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .  # 这里在项目根目录找Dockerfile构建
-          platforms: linux/amd64,linux/arm,linux/arm64
-          push: true 
-          tags: ${{ vars.DOCKER_IMAGE_NAME }}:${{ env.APP_VERSION }}, ${{ vars.DOCKER_IMAGE_NAME }}
+          # 从 GitHub 事件负载中获取分支名
+          BRANCH_NAME=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # 对于除了 "main" 分支和标签以外的分支，使用 "latest" 版本号
+          VERSION=$(if [ "$BRANCH_NAME" == "main" ]; then echo "latest"; else echo $BRANCH_NAME; fi)
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
