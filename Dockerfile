@@ -72,12 +72,6 @@ RUN rm /etc/nginx/conf.d/default.conf
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/
 
-# Copy static assets from web_image stage
-COPY --from=web_image /build/dist /usr/share/nginx/html
-
-# Copy server binary and assets from server_image stage
-COPY --from=server_image /build/sun-panel /app/sun-panel
-
 # Make sure the sun-panel executable is runnable
 RUN chmod +x /app/sun-panel
 
