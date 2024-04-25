@@ -1,5 +1,6 @@
 # build frontend
-FROM node AS web_image
+FROM node:18-alpine AS web_image
+
 
 # 华为源
 # RUN npm config set registry https://repo.huaweicloud.com/repository/npm/
