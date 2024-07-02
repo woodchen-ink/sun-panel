@@ -163,10 +163,6 @@ onUnmounted(() => {
                         </div>
                         <span class="ml-2">{{ item.name }}</span>
                       </div>
-                    <!-- 更多按钮 -->
-                    <!-- <div class="ml-auto">
-                      <SvgIcon icon="mingcute-more-1-fill" />
-                    </div> -->
                     </div>
                   </div>
                 </div>

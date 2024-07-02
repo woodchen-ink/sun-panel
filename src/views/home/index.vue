@@ -614,7 +614,6 @@ html {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  /* background: url(@/assets/start_sky.jpg) no-repeat; */
 
   transform: scale(1.05);
 }
