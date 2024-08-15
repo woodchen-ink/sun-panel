@@ -1,13 +1,12 @@
 import { ss } from '@/utils/storage'
 import { PanelPanelConfigStyleEnum, PanelStateNetworkModeEnum } from '@/enums'
-import defaultBackground from '@/assets/defaultBackground.webp'
 const LOCAL_NAME = 'panelStorage'
 
 const defaultFooterHtml = ''
 
 export function defaultStatePanelConfig(): Panel.panelConfig {
   return {
-    backgroundImageSrc: defaultBackground,
+    backgroundImageSrc: 'https://random-api.czl.net/pic/ecy',
     backgroundBlur: 0,
     backgroundMaskNumber: 0,
     iconStyle: PanelPanelConfigStyleEnum.icon,

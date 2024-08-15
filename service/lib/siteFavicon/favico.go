@@ -110,7 +110,6 @@ func DownloadImage(url, savePath string, maxSize int64) (*os.File, error) {
 }
 
 func GetOneFaviconURLAndUpload(urlStr string) (string, bool) {
-	//www.iqiyipic.com/pcwimg/128-128-logo.png
 	iconURLs, err := getFaviconURL(urlStr)
 	if err != nil {
 		return "", false
