@@ -1,14 +1,17 @@
-version: "3.2"
-
 services:
   sun-panel:
-    image: 'hslr/sun-panel:latest'
     container_name: sun-panel
-    volumes:
-    - ./conf:/app/conf
-    - ./uploads:/app/uploads
-    - ./database:/app/database
-    # - ./runtime:/app/runtime
+    image: woodchen/sun-panel
     ports:
-    - 3002:3002
+      - "5002:3002"
+    volumes:
+      - ./conf:/app/conf
+      - ./conf/uploads:/app/uploads
+      - ./conf/database:/app/database
+      - ./conf/custom:/app/web/custom
     restart: always
+    networks:
+      - 1panel-network
+networks:
+  1panel-network:
+    external: true
