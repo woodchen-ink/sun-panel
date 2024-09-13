@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG代码转图片</title>
+  <link rel="stylesheet" href="https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/mdui/2.1.2/mdui.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/mdui/2.1.2/mdui.global.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="https://cdn-r2.czl.net/frame/notosans/font-noimportant.css" media="all">
+  <style>
+    html,
+    body {
+      height: 100%;
+      overflow: auto;
+      background-image: url("https://random-api.czl.net/pic/all");
+      background-size: cover;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .result-text {
+      flex-grow: 1;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      /* 使子元素垂直排列 */
+      gap: 10px;
+      /* 设置子元素之间的间隔 */
+      max-width: 800px;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 0 auto;
+      /* border: 1px solid #ddd; */
+      background-color: rgba(255, 232, 254, 0.8);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mdui-prose container" variant="filled">
+    <h1 style="text-align: center;">SVG代码转图片</h1>
+
+    <mdui-text-field autosize min-rows="2" max-rows="5" id="svgInput" variant="outlined"
+      label="在这里输入你的SVG代码..."></mdui-text-field>
+    <mdui-button full-width onclick="convertSVG()">转换</mdui-button>
+
+    <h3>转换结果</h3>
+    <div id="output" style="margin-top: 20px;border: 1px solid #ddd;border-radius: 8px;padding: 10px;">
+    </div>
+
+    <mdui-button full-width onclick="downloadImage()" style="margin-top: 20px;">下载图片</mdui-button>
+  </div>
+
+  <script>
+    function convertSVG() {
+      const svgCode = document.getElementById('svgInput').value;
+      const outputDiv = document.getElementById('output');
+      outputDiv.innerHTML = svgCode;
+    }
+
+    function downloadImage() {
+      const svgElement = document.querySelector('#output svg');
+      if (!svgElement) {
+        alert('请先转换SVG代码');
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        const dataURL = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = 'svg-image.png';
+        link.href = dataURL;
+        link.click();
+      };
+
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    }
+  </script>
+</body>
+
+
+</html>
