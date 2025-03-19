@@ -3,7 +3,7 @@ import { computed, defineEmits, defineProps, ref, watch } from 'vue'
 import type { FormInst, FormRules } from 'naive-ui'
 import { NButton, NForm, NFormItem, NGrid, NGridItem, NInput, NInputGroup, NModal, NSelect, useMessage } from 'naive-ui'
 import IconEditor from './IconEditor.vue'
-import { edit, getSiteFavicon, GetSiteFaviconResponse } from '@/api/panel/itemIcon'
+import { edit, getSiteFavicon } from '@/api/panel/itemIcon'
 import { getList as getGroupList } from '@/api/panel/itemIconGroup'
 import { t } from '@/locales'
 

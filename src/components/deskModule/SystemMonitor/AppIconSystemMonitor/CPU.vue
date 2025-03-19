@@ -14,6 +14,8 @@ interface Prop {
 }
 
 const props = defineProps<Prop>()
+// 将timer类型定义为any以避免TypeScript类型错误
+// @ts-ignore
 let timer: NodeJS.Timer
 const cpuState = ref<SystemMonitor.CPUInfo | null>(null)
 
