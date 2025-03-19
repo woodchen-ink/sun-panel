@@ -75,7 +75,6 @@
       "show": "显示",
       "showTitle": "显示标题",
       "smallIcon": "小图标",
-      "systemMonitorStatus": "系统状态组件",
       "textContent": "文本内容",
       "topMargin": "上边距",
       "uploadOrDragText": "点击上传替换图片或拖拽到框内",
@@ -201,15 +200,6 @@
     "searchBox": {
       "inputPlaceholder": "请输入搜索内容",
       "openWithNewOpen": "新窗口打开"
-    },
-    "systemMonitor": {
-      "cpuState": "CPU状态",
-      "diskMountPoint": "挂载点",
-      "diskState": "磁盘状态",
-      "memoryState": "内存状态",
-      "progressColor": "主色",
-      "progressRailColor": "副色",
-      "systemState": "系统状态"
     }
   },
   "form": {

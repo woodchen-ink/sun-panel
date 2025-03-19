@@ -3,7 +3,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { NBackTop, NButton, NButtonGroup, NDropdown, NModal, NSkeleton, NSpin, useDialog, useMessage } from 'naive-ui'
 import { nextTick, onMounted, ref } from 'vue'
 import { AppIcon, AppStarter, EditItem } from './components'
-import { Clock, SearchBox, SystemMonitor } from '@/components/deskModule'
+import { Clock, SearchBox } from '@/components/deskModule'
 import { SvgIcon } from '@/components/common'
 import { deletes, getListByGroupId, saveSort } from '@/api/panel/itemIcon'
 import { getList as getGroupList } from '@/api/panel/itemIconGroup'
@@ -364,18 +364,6 @@ function handleAddItem(itemIconGroupId?: number) {
 
         <!-- 应用盒子 -->
         <div :style="{ marginLeft: `${panelState.panelConfig.marginX}px`, marginRight: `${panelState.panelConfig.marginX}px` }">
-          <!-- 系统监控状态 -->
-          <div
-            v-if="panelState.panelConfig.systemMonitorShow
-              && ((panelState.panelConfig.systemMonitorPublicVisitModeShow && authStore.visitMode === VisitMode.VISIT_MODE_PUBLIC)
-                || authStore.visitMode === VisitMode.VISIT_MODE_LOGIN)"
-            class="flex mx-auto"
-          >
-            <SystemMonitor
-              :allow-edit="authStore.visitMode === VisitMode.VISIT_MODE_LOGIN"
-              :show-title="panelState.panelConfig.systemMonitorShowTitle"
-            />
-          </div>
 
           <!-- 组纵向排列 -->
           <div

@@ -75,7 +75,6 @@
       "show": "Show",
       "showTitle": "Show title",
       "smallIcon": "Small icon",
-      "systemMonitorStatus": "System status component",
       "textContent": "Text content",
       "topMargin": "Top margin",
       "uploadOrDragText": "Click to upload or drag and drop into the box to replace the image",
@@ -201,15 +200,6 @@
     "searchBox": {
       "inputPlaceholder": "Enter search content",
       "openWithNewOpen": "Open in new window"
-    },
-    "systemMonitor": {
-      "cpuState": "CPU status",
-      "diskMountPoint": "Mount point",
-      "diskState": "Disk status",
-      "memoryState": "Memory status",
-      "progressColor": "Main color",
-      "progressRailColor": "Secondary color",
-      "systemState": "System status"
     }
   },
   "form": {
