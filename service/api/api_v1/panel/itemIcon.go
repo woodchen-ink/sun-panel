@@ -3,6 +3,7 @@ package panel
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -205,42 +206,77 @@ func (a *ItemIcon) GetSiteFavicon(c *gin.Context) {
 		return
 	}
 	resp := panelApiStructs.ItemIconGetSiteFaviconResp{}
-	fullUrl := ""
-	if iconUrl, err := siteFavicon.GetOneFaviconURL(req.Url); err != nil {
-		apiReturn.Error(c, "acquisition failed: get ico error:"+err.Error())
-		return
-	} else {
-		fullUrl = iconUrl
+
+	// 格式化输入URL，确保它有有效的scheme前缀
+	if !strings.HasPrefix(req.Url, "http://") && !strings.HasPrefix(req.Url, "https://") {
+		req.Url = "https://" + req.Url
 	}
 
 	parsedURL, err := url.Parse(req.Url)
 	if err != nil {
-		apiReturn.Error(c, "acquisition failed:"+err.Error())
+		apiReturn.Error(c, "URL解析失败:"+err.Error())
 		return
 	}
 
-	protocol := parsedURL.Scheme
-	global.Logger.Debug("protocol:", protocol)
+	// 尝试多种方法获取favicon
+	var fullUrl string
+	var iconFound bool = false
+
+	// 方法1: 使用siteFavicon库获取
+	if iconUrl, err := siteFavicon.GetOneFaviconURL(req.Url); err == nil {
+		fullUrl = iconUrl
+		iconFound = true
+	}
+
+	// 方法2: 如果方法1失败，尝试直接使用favicon.ico路径
+	if !iconFound {
+		defaultIconUrl := fmt.Sprintf("%s://%s/favicon.ico", parsedURL.Scheme, parsedURL.Host)
+		// 检查favicon.ico是否存在
+		resp, err := http.Head(defaultIconUrl)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			fullUrl = defaultIconUrl
+			iconFound = true
+			resp.Body.Close()
+		}
+	}
+
+	// 方法3: 尝试使用谷歌的favicon服务
+	if !iconFound {
+		googleFaviconUrl := fmt.Sprintf("https://i.czl.net/mirror/https://www.google.com/s2/favicons?domain=%s&sz=64", parsedURL.Host)
+		fullUrl = googleFaviconUrl
+		iconFound = true
+	}
+
+	if !iconFound {
+		apiReturn.Error(c, "无法获取网站图标")
+		return
+	}
+
 	global.Logger.Debug("fullUrl:", fullUrl)
 
 	// 如果URL以双斜杠（//）开头，则使用当前页面协议
 	if strings.HasPrefix(fullUrl, "//") {
-		fullUrl = protocol + "://" + fullUrl[2:]
+		fullUrl = parsedURL.Scheme + ":" + fullUrl
 	} else if !strings.HasPrefix(fullUrl, "http://") && !strings.HasPrefix(fullUrl, "https://") {
-		// 如果URL既不以http://开头也不以https://开头，则默认为http协议
-		fullUrl = "http://" + fullUrl
+		// 如果URL既不以http://开头也不以https://开头，则使用与原始URL相同的协议
+		fullUrl = parsedURL.Scheme + "://" + strings.TrimPrefix(fullUrl, "/")
 	}
-	global.Logger.Debug("fullUrl:", fullUrl)
+
+	global.Logger.Debug("处理后的图标URL:", fullUrl)
+
 	// 去除图标的get参数
-	{
-		parsedIcoURL, err := url.Parse(fullUrl)
-		if err != nil {
-			apiReturn.Error(c, "acquisition failed: parsed ico URL :"+err.Error())
-			return
-		}
+	parsedIcoURL, err := url.Parse(fullUrl)
+	if err != nil {
+		apiReturn.Error(c, "解析图标URL失败:"+err.Error())
+		return
+	}
+
+	// 保留查询参数，特别是对于Google favicon服务的URL
+	if !strings.Contains(fullUrl, "google.com/s2/favicons") {
 		fullUrl = parsedIcoURL.Scheme + "://" + parsedIcoURL.Host + parsedIcoURL.Path
 	}
-	global.Logger.Debug("fullUrl:", fullUrl)
+
+	global.Logger.Debug("最终的图标URL:", fullUrl)
 
 	// 生成保存目录
 	configUpload := global.Config.GetValueString("base", "source_path")
@@ -252,16 +288,16 @@ func (a *ItemIcon) GetSiteFavicon(c *gin.Context) {
 
 	// 下载
 	var imgInfo *os.File
-	{
-		var err error
-		if imgInfo, err = siteFavicon.DownloadImage(fullUrl, savePath, 1024*1024); err != nil {
-			apiReturn.Error(c, "acquisition failed: download"+err.Error())
-			return
-		}
+	if imgInfo, err = siteFavicon.DownloadImage(fullUrl, savePath, 1024*1024); err != nil {
+		apiReturn.Error(c, "下载图标失败:"+err.Error())
+		return
 	}
 
 	// 保存到数据库
 	ext := path.Ext(fullUrl)
+	if ext == "" {
+		ext = ".ico" // 默认扩展名
+	}
 	mFile := models.File{}
 	if _, err := mFile.AddFile(userInfo.ID, parsedURL.Host, ext, imgInfo.Name()); err != nil {
 		apiReturn.ErrorDatabase(c, err.Error())
