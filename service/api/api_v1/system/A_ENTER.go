@@ -7,5 +7,4 @@ type ApiSystem struct {
 	FileApi         FileApi
 	NoticeApi       NoticeApi
 	ModuleConfigApi ModuleConfigApi
-	MonitorApi      MonitorApi
 }
