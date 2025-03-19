@@ -9,5 +9,4 @@ func Init(routerGroup *gin.RouterGroup) {
 	InitFileRouter(routerGroup)
 	InitNoticeRouter(routerGroup)
 	InitModuleConfigRouter(routerGroup)
-	InitMonitorRouter(routerGroup)
 }
