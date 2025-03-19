@@ -173,3 +173,45 @@ func getFaviconURL(url string) ([]string, error) {
 
 	return icons, nil
 }
+
+// GetWebTitleAndDescription 获取网页标题和描述
+func GetWebTitleAndDescription(urlStr string) (title string, description string, err error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return "", "", err
+	}
+
+	// 设置User-Agent头字段，模拟浏览器请求
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", "", errors.New("HTTP request failed with status code " + strconv.Itoa(resp.StatusCode))
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return "", "", err
+	}
+
+	// 获取网页标题
+	title = doc.Find("title").Text()
+
+	// 获取网页描述
+	description = ""
+	doc.Find("meta").Each(func(i int, s *goquery.Selection) {
+		if name, _ := s.Attr("name"); strings.ToLower(name) == "description" {
+			if content, exists := s.Attr("content"); exists {
+				description = content
+			}
+		}
+	})
+
+	return title, description, nil
+}

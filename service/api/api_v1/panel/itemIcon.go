@@ -268,5 +268,16 @@ func (a *ItemIcon) GetSiteFavicon(c *gin.Context) {
 		return
 	}
 	resp.IconUrl = imgInfo.Name()[1:]
+
+	// 获取网页标题和描述
+	title, description, err := siteFavicon.GetWebTitleAndDescription(req.Url)
+	if err != nil {
+		global.Logger.Warn("获取网页标题和描述失败：", err.Error())
+		// 这里不返回错误，因为图标已经获取成功，即使获取标题和描述失败也应该返回图标
+	} else {
+		resp.Title = title
+		resp.Description = description
+	}
+
 	apiReturn.SuccessData(c, resp)
 }

@@ -42,7 +42,14 @@ export function saveSort<T>(data: Panel.ItemIconSortRequest) {
   })
 }
 
-export function getSiteFavicon<T>(url: string) {
+// 为getSiteFavicon添加接口返回类型
+export interface GetSiteFaviconResponse {
+  iconUrl: string
+  title: string
+  description: string
+}
+
+export function getSiteFavicon<T = GetSiteFaviconResponse>(url: string) {
   return post<T>({
     url: '/panel/itemIcon/getSiteFavicon',
     data: { url },

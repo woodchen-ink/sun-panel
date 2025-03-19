@@ -3,7 +3,7 @@ import { computed, defineEmits, defineProps, ref, watch } from 'vue'
 import type { FormInst, FormRules } from 'naive-ui'
 import { NButton, NForm, NFormItem, NGrid, NGridItem, NInput, NInputGroup, NModal, NSelect, useMessage } from 'naive-ui'
 import IconEditor from './IconEditor.vue'
-import { edit, getSiteFavicon } from '@/api/panel/itemIcon'
+import { edit, getSiteFavicon, GetSiteFaviconResponse } from '@/api/panel/itemIcon'
 import { getList as getGroupList } from '@/api/panel/itemIconGroup'
 import { t } from '@/locales'
 
@@ -114,11 +114,21 @@ const handleValidateButtonClick = (e: MouseEvent) => {
 async function getIconByUrl(url: string, loadingIndex: number) {
   getIconLoading.value[loadingIndex] = true
   try {
-    const { code, data } = await getSiteFavicon<{ iconUrl: string }>(url)
+    const { code, data } = await getSiteFavicon(url)
     if (code === 0) {
+      // 设置图标
       model.value.icon = {
         itemType: 2,
         src: data.iconUrl,
+      }
+      
+      // 如果网站标题和描述不为空，自动填充表单
+      if (data.title && !model.value.title) {
+        model.value.title = data.title
+      }
+      
+      if (data.description && !model.value.description) {
+        model.value.description = data.description
       }
     }
     else {

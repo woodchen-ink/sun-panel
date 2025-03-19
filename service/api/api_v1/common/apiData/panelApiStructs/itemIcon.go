@@ -20,5 +20,7 @@ type ItemIconGetSiteFaviconReq struct {
 }
 
 type ItemIconGetSiteFaviconResp struct {
-	IconUrl string `json:"iconUrl"`
+	IconUrl     string `json:"iconUrl"`
+	Title       string `json:"title"`       // 网页标题
+	Description string `json:"description"` // 网页描述
 }
